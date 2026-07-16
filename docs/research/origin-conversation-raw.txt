@@ -1,0 +1,2137 @@
+=== [0] ASSISTANT (7807 chars) ===
+I actually think this is the pivotal question. It changes the product from "better documentation" to "capturing information that cannot be recovered from source code."
+
+The better agents become at reading code, the less valuable descriptive documentation becomes.
+
+Imagine an agent in 2030. It can:
+
+read 500k LOC in seconds,
+
+build an accurate call graph,
+
+infer control flow,
+
+identify invariants,
+
+execute tests,
+
+inspect git history,
+
+run the application,
+
+compare branches,
+
+even infer architecture reasonably well.
+
+What information is still missing?
+
+That is where documentation should live.
+
+A thought experiment
+
+Suppose I ask an agent:
+
+"How does authentication work?"
+
+Today, we would expect it to read docs/auth.md.
+
+A future agent probably won't.
+
+It will simply inspect:
+
+middleware
+↓
+JWT verification
+↓
+tenant resolution
+↓
+authorization
+↓
+request handlers
+
+and answer perfectly.
+
+Now ask instead:
+
+"Why is authentication split into verification and authorization instead of a single middleware?"
+
+That answer is almost never recoverable from code.
+
+I think there are two categories of information
+Recoverable information
+
+Information that a sufficiently capable agent can derive.
+
+Examples:
+
+call graphs
+
+dependency graphs
+
+module boundaries
+
+API endpoints
+
+configuration defaults
+
+data flow
+
+state machines
+
+algorithm implementation
+
+which function calls another
+
+retry count
+
+timeout values
+
+SQL schema
+
+These should almost never be manually documented.
+
+If they are, they'll drift.
+
+Instead:
+
+derive them
+
+or
+
+reference them.
+
+Non-recoverable information
+
+Information that existed only in someone's head.
+
+Examples:
+
+why
+
+intent
+
+tradeoffs
+
+constraints
+
+assumptions
+
+business rules
+
+organizational context
+
+historical accidents
+
+acceptable compromises
+
+These are the things that disappear when people leave.
+
+These are what documentation should preserve.
+
+I would almost define documentation differently
+
+Instead of
+
+documentation explains the system
+
+I'd define it as
+
+documentation explains everything that cannot be inferred from the system.
+
+That is a radically different philosophy.
+
+Let's enumerate those gaps
+
+I think they fall into surprisingly few categories.
+
+1. Intent
+
+The biggest one.
+
+Example
+
+TypeScript
+if (cacheAge < 7)
+
+The code tells me
+
+seven.
+
+Documentation tells me
+
+We intentionally use seven because payment processors can take up to five days to reconcile. Two additional days avoid race conditions.
+
+Intent answers
+
+What were we trying to accomplish?
+
+2. Tradeoffs
+
+Example
+
+Why PostgreSQL instead of DynamoDB?
+
+The code never tells you.
+
+Even if the commit message does, finding it is difficult.
+
+Tradeoffs answer
+
+Why this design over the alternatives?
+
+3. Constraints
+
+Example
+
+IDs cannot exceed 63 characters.
+
+The code enforces it.
+
+But why?
+
+Documentation explains
+
+AWS IAM role names are limited to 64 characters, and we reserve one character internally.
+
+The code cannot infer external constraints.
+
+4. Assumptions
+
+Example
+
+Requests are processed in order.
+
+Why?
+
+Because Kafka ordering is guaranteed only within a partition.
+
+That assumption exists outside the code.
+
+5. Invariants
+
+This one's interesting.
+
+Code enforces some invariants.
+
+But not all.
+
+Example
+
+A user must never belong to two active subscriptions.
+
+The database may not enforce it.
+
+Tests may not cover it.
+
+It's still a business invariant.
+
+6. Domain concepts
+
+Code has
+
+Invoice
+Order
+Reservation
+Session
+
+But...
+
+What's the difference between
+
+Reservation
+
+Booking
+
+Hold
+
+Tentative reservation
+
+Confirmed reservation
+
+Only humans know.
+
+7. Vocabulary
+
+Agents struggle more than humans here.
+
+Example
+
+Workspace
+Project
+Organization
+Tenant
+Account
+
+Are those synonyms?
+
+Hierarchy?
+
+Different names historically?
+
+A glossary helps enormously.
+
+8. Decision history
+
+Not every decision.
+
+Only irreversible ones.
+
+Example
+
+We use optimistic locking.
+
+Reason:
+Database replicas introduce too much latency for pessimistic locks.
+9. Failure philosophy
+
+This is huge.
+
+Example
+
+Why retry?
+
+Why fail fast?
+
+Why ignore?
+
+Why compensate?
+
+Code shows behavior.
+
+Not philosophy.
+
+10. Operational knowledge
+
+Example
+
+If Redis fills up
+
+Do X.
+
+If queue latency exceeds 20 seconds
+
+Ignore.
+
+This isn't code.
+
+11. Ownership
+
+Code can't infer
+
+Who owns this?
+
+Who understands it?
+
+Who approves changes?
+
+12. Stability guarantees
+
+Example
+
+This interface is internal.
+
+You may freely refactor it.
+
+versus
+
+This endpoint is a public contract.
+
+The code doesn't distinguish.
+
+13. Confidence
+
+This is underrated.
+
+Imagine
+
+This parser probably works.
+
+Nobody understands it.
+
+Do not modify casually.
+
+That's incredibly valuable.
+
+14. Known weirdness
+
+Example
+
+This looks wrong.
+
+It is intentionally wrong.
+
+Reason:
+Chrome 108 bug.
+
+Every engineer has seen this.
+
+Something interesting emerges
+
+Notice that almost none of these describe implementation.
+
+They're describing
+
+decisions.
+
+Documentation becomes metadata about code
+
+Not code itself.
+
+For example
+
+Function
+
+Purpose
+Intent
+Constraints
+Alternatives
+Risk
+Owner
+Confidence
+History
+
+Rather than
+
+Function
+
+It calls X.
+
+Then Y.
+
+Then Z.
+
+An agent can figure that out.
+
+I think docs should maximize information gain
+
+This is a concept from information theory.
+
+Suppose an agent already knows
+
+95%
+
+of what the code says.
+
+Then documentation should aim to provide the missing
+
+5%
+
+not repeat the 95%.
+
+We can even define this formally
+
+Imagine
+
+Information Gain =
+Knowledge(after docs)
+-
+Knowledge(after code)
+
+Great documentation maximizes this.
+
+Bad documentation has near-zero gain.
+
+Example
+
+saveUser()
+
+Saves the user.
+
+Gain = 0.
+
+Example
+
+saveUser()
+
+We intentionally avoid transactions because writes are replicated to three independent regional databases.
+
+Consistency is eventually restored by the reconciliation worker.
+
+Huge gain.
+
+This has profound implications for the language
+
+Instead of
+
+@claim
+
+Maybe the first-class concepts are
+
+@intent
+
+@tradeoff
+
+@constraint
+
+@assumption
+
+@invariant
+
+@decision
+
+@glossary
+
+@risk
+
+@history
+
+@owner
+
+@stability
+
+Notice none of these duplicate implementation.
+
+We might even score documentation quality
+
+Imagine a linter.
+
+It sees
+
+The cache stores users.
+
+It says
+
+Low information gain.
+
+It sees
+
+The cache intentionally excludes suspended users because account restoration must always read the database.
+
+See incident INC-241.
+
+High information gain.
+
+An unexpected consequence
+
+This also changes when documentation should be updated.
+
+Instead of
+
+Code changed.
+
+Update docs.
+
+It's more like
+
+Did intent change?
+
+Did assumptions change?
+
+Did tradeoffs change?
+
+Did invariants change?
+
+Did constraints change?
+
+Many code changes won't affect any of those.
+
+Meaning...
+
+Most PRs should require no documentation update.
+
+That's actually a feature.
+
+The framework becomes much simpler
+
+Instead of trying to map every file to every doc,
+
+map
+
+Intent
+
+↓
+
+Code
+
+Tradeoff
+
+↓
+
+Architecture
+
+Constraint
+
+↓
+
+Implementation
+
+Invariant
+
+↓
+
+Tests
+
+Decision
+
+↓
+
+ADR
+
+The graph becomes semantic rather than syntactic.
+
+My favorite emerging principle
+
+I think this could become almost the mission statement of the framework:
+
+Code explains what the system does. Documentation preserves why the system is this way.
+
+Or, extending it slightly:
+
+Anything an ideal agent could recover from code should not be manually documented. Documentation should capture the information that would otherwise disappear if every engineer who built the system left tomorrow.
+
+I think that's a much stronger foundation than "self-healing docs." It gives the framework a clear philosophy: it is not trying to compete with increasingly capable code-understanding agents. It is trying to preserve the latent knowledge that those agents, no matter how capable, cannot infer because it was never encoded in the software in the first place.
+
+=== [1] USER (383 chars) ===
+i think this is the way forward, indeed. we have to think this end to end, and by that i mean, for example, from the first-class concepts to maybe creating a skill as an interface for agents that teach them how to use this and how to write good docs, how to verify, deterministic/agentic linter, etc etc.
+
+what would be the bricks for building this fully fledged framework?
+Show more
+
+=== [2] ASSISTANT (25775 chars) ===
+Yes. At this point, I would think of it as a complete documentation operating system for agents, not as a Markdown convention or a Neo4j integration.
+
+The framework needs to solve five different problems:
+
+What knowledge is worth preserving?
+
+How is that knowledge represented?
+
+How do agents discover and use it?
+
+How do agents create and maintain it correctly?
+
+How does the system detect when the knowledge base is degraded?
+
+Those are separate concerns. The mistake would be to solve all of them with one annotation syntax or one graph database.
+
+The full stack
+
+I would divide the framework into ten major bricks.
+
+1. Philosophy and quality model
+2. Knowledge ontology
+3. Authoring language
+4. Knowledge graph and indexes
+5. Source-code integration
+6. Agent skill and runtime interface
+7. Linters and validators
+8. Change-impact and maintenance engine
+9. Repository workflows
+10. Governance and observability
+
+Each layer should have a narrow responsibility.
+
+1. Philosophy and quality model
+
+Before syntax or tooling, the framework needs a doctrine.
+
+Otherwise agents will generate technically valid but useless documentation.
+
+The central rule could be:
+
+Document information that cannot be reliably reconstructed from the repository itself.
+
+That includes intent, constraints, tradeoffs, invariants, domain meaning, risks, guarantees, and historical context that still affects present behavior.
+
+It usually excludes:
+
+call graphs,
+
+file descriptions,
+
+parameter lists,
+
+obvious control flow,
+
+copied configuration values,
+
+descriptions that simply restate code.
+
+Quality dimensions
+
+The framework should formally define what “good” means.
+
+A documentation item could be evaluated across:
+
+Information gain
+Relevance
+Authority
+Traceability
+Scope clarity
+Freshness
+Non-redundancy
+Actionability
+Confidence
+Discoverability
+
+For example:
+
+YAML
+quality:
+  information_gain: high
+  authority: canonical
+  evidence_strength: medium
+  confidence: high
+  scope_clarity: explicit
+
+Not every item needs explicit scores, but the framework should use these concepts internally.
+
+The negative definition
+
+The framework should also explicitly identify anti-patterns:
+
+Restating implementation
+Speculating about intent
+Documenting temporary code structure
+Copying source-derived values
+Creating multiple canonical explanations
+Writing broad essays without scope
+Recording decisions without consequences
+Recording historical context that no longer matters
+
+This philosophy must be embedded in every agent instruction and linter.
+
+2. Knowledge ontology
+
+The ontology defines the kinds of knowledge the framework understands.
+
+This is probably the most important design artifact.
+
+The first version should remain small. Too many concepts will make authoring burdensome.
+
+First-class knowledge types
+
+I would start with these:
+
+Intent
+
+What outcome was the system designed to produce?
+
+YAML
+type: intent
+id: payments.retry-policy.intent
+statement: >
+  Increase successful payment capture without creating duplicate charges.
+Constraint
+
+What limits the solution space?
+
+YAML
+type: constraint
+id: payments.processor-idempotency-window
+statement: >
+  The payment processor only guarantees idempotency for 24 hours.
+source:
+  - external-contract: processor-api-v3
+Assumption
+
+What is believed to be true but may not be enforced?
+
+YAML
+type: assumption
+id: orders.events-partitioned-by-order
+statement: >
+  All events for an order are delivered through the same partition.
+Invariant
+
+What must remain true?
+
+YAML
+type: invariant
+id: billing.single-active-subscription
+statement: >
+  An account must never have more than one active subscription.
+Decision
+
+What choice was made?
+
+YAML
+type: decision
+id: auth.stateless-access-tokens
+statement: >
+  Access-token validation remains stateless.
+Tradeoff
+
+What was accepted or sacrificed?
+
+YAML
+type: tradeoff
+id: auth.revocation-latency
+statement: >
+  Stateless validation accepts up to five minutes of revocation latency
+  in exchange for avoiding a database read on every request.
+Rejected alternative
+
+What plausible option was considered and rejected?
+
+YAML
+type: alternative
+id: auth.database-session-check
+status: rejected
+reason: >
+  It introduced an unacceptable dependency on the session store for
+  every authenticated request.
+Domain concept
+
+What does a term mean in this system?
+
+YAML
+type: concept
+id: fulfillment.reservation
+definition: >
+  A temporary allocation of inventory that has not yet become an order.
+Guarantee
+
+What can consumers rely on?
+
+YAML
+type: guarantee
+id: api.webhook-ordering
+statement: >
+  Webhooks are ordered per account, but not globally.
+Risk
+
+Where is the system fragile or surprising?
+
+YAML
+type: risk
+id: reconciliation.non-idempotent-legacy-path
+statement: >
+  Replaying legacy reconciliation jobs can duplicate ledger annotations.
+Known anomaly
+
+What looks wrong but is intentional?
+
+YAML
+type: anomaly
+id: exports.one-day-overlap
+statement: >
+  Export windows overlap by one day to account for late-arriving records.
+Operational heuristic
+
+What practice is useful but not a hard rule?
+
+YAML
+type: heuristic
+id: queue.backlog-triage
+statement: >
+  Backlogs under ten minutes usually self-correct and should not trigger
+  manual replay.
+Ownership
+
+Who has authority or relevant context?
+
+YAML
+type: ownership
+id: auth.domain-owner
+team: identity-platform
+Confidence or uncertainty
+
+What is not fully understood?
+
+YAML
+type: uncertainty
+id: legacy.parser-order-dependency
+statement: >
+  The parser appears to depend on insertion order, but this has not been
+  conclusively verified.
+Relationships
+
+The ontology also needs a controlled relationship vocabulary.
+
+APPLIES_TO
+MOTIVATES
+CONSTRAINS
+JUSTIFIES
+ENFORCED_BY
+PARTIALLY_ENFORCED_BY
+VERIFIED_BY
+VIOLATED_BY
+DEPENDS_ON
+ASSUMES
+SUPERSEDES
+REJECTS
+QUALIFIES
+CONTRADICTS
+RISKS
+OWNED_BY
+DEFINED_IN
+VALID_DURING
+
+Example:
+
+Constraint
+  ──CONSTRAINS──> Decision
+
+Decision
+  ──JUSTIFIES──> Code symbol
+
+Invariant
+  ──ENFORCED_BY──> Database constraint
+
+Invariant
+  ──VERIFIED_BY──> Test
+
+Tradeoff
+  ──QUALIFIES──> Decision
+
+This is where the graph becomes useful.
+
+3. Authoring language
+
+The authoring interface should optimize for three audiences:
+
+engineers,
+
+agents,
+
+tooling.
+
+Markdown with structured metadata is likely the right starting point.
+
+A custom standalone language would create too much friction.
+
+Two authoring modes
+
+The framework should support both:
+
+Narrative documents
+
+Useful for explanations where several knowledge items belong together.
+
+Markdown
+---
+id: auth.token-strategy
+type: rationale
+authority: canonical
+scope:
+  domain: authentication
+---
+
+# Token strategy
+
+@intent auth.token-strategy.performance
+Token validation must not depend on a synchronous database lookup.
+@end
+
+@decision auth.stateless-validation
+Access tokens are validated statelessly.
+@end
+
+@tradeoff auth.revocation-delay
+We accept a maximum revocation delay of five minutes.
+@end
+
+@constraint auth.multi-region-latency
+A central session lookup would add cross-region latency to every request.
+@end
+Atomic knowledge records
+
+Useful for programmatic maintenance and small facts.
+
+YAML
+id: auth.revocation-delay
+type: tradeoff
+statement: >
+  We accept a maximum revocation delay of five minutes.
+applies_to:
+  - symbol:auth.verifyAccessToken
+  - concept:auth.access-token
+supports:
+  - decision:auth.stateless-validation
+
+Narrative files could compile into atomic records.
+
+Required metadata
+
+Every meaningful item should have:
+
+Stable ID
+Type
+Statement
+Scope
+Status
+Authority level
+Applies-to references
+Owner or ownership domain
+
+Some types should require additional fields.
+
+A decision should require:
+
+Context
+Chosen option
+Alternatives
+Consequences
+Status
+
+An invariant should require:
+
+Statement
+Scope
+Criticality
+Enforcement
+Verification
+
+An assumption should require:
+
+Statement
+Evidence
+Failure consequence
+Review trigger
+Stable references
+
+References should prefer semantic identities:
+
+symbol:payments.RetryPolicy.calculateDelay
+concept:billing.subscription
+decision:auth.stateless-validation
+config:auth.accessTokenTtl
+schema:public.orders.status
+test:auth.token-revocation
+external:stripe.idempotency-policy
+
+File paths may be recorded as resolution hints, but they should not be the identity.
+
+Status model
+
+Knowledge needs a lifecycle.
+
+draft
+active
+contested
+deprecated
+superseded
+historical
+invalid
+unknown
+
+“Contested” and “unknown” are important. The framework should permit unresolved knowledge rather than encouraging agents to fabricate certainty.
+
+4. Knowledge graph and indexes
+
+The graph is the semantic backbone, but it should be generated from repository content.
+
+The repository should remain the source of truth.
+
+Neo4j could be used as a derived index.
+
+Markdown/YAML + code indexes + tests + schemas
+                    ↓
+              documentation compiler
+                    ↓
+       graph database + search indexes
+Main node categories
+KnowledgeItem
+Document
+Section
+Concept
+Decision
+Invariant
+Constraint
+Assumption
+Symbol
+CodeFile
+Test
+Schema
+Config
+Service
+Team
+Commit
+PullRequest
+Incident
+ExternalContract
+Important graph queries
+
+The framework should support questions like:
+
+Why does this symbol behave this way?
+
+What invariants apply to this module?
+
+Which assumptions underpin this service?
+
+What decisions constrain this change?
+
+What risks should an agent know before modifying this code?
+
+Is this explanation canonical?
+
+Are there competing explanations?
+
+Which knowledge items became unsupported after this change?
+
+Which decisions have no surviving implementation?
+
+Which invariants have no test or enforcement?
+
+Which assumptions have never been revalidated?
+Search must combine several retrieval modes
+
+Agents should not query only by vector similarity.
+
+Use:
+
+Graph traversal
+Exact ID resolution
+Symbol resolution
+Keyword search
+Semantic search
+Scope filtering
+Authority ranking
+Freshness ranking
+
+A vector result that is historical or noncanonical should not outrank the active authoritative item.
+
+5. Source-code integration
+
+The framework must understand enough about the repository to connect knowledge to implementation.
+
+It does not need to understand everything.
+
+Code indexing
+
+Use language tooling such as:
+
+language servers,
+
+tree-sitter,
+
+compiler APIs,
+
+package manifests,
+
+schema parsers,
+
+configuration parsers,
+
+test discovery.
+
+The index should expose:
+
+Symbols
+Public interfaces
+References
+Call relationships
+Imports
+Ownership boundaries
+Schemas
+Config keys
+Tests
+Executable examples
+Semantic attachment
+
+Documentation items can apply to:
+
+YAML
+applies_to:
+  - symbol:auth.verifyAccessToken
+  - namespace:auth.middleware.*
+  - service:identity-api
+  - schema:public.sessions
+  - path:src/auth/**
+
+Scope must support different granularities.
+
+Evidence strength
+
+A knowledge item should identify how strongly it is connected to implementation.
+
+YAML
+enforcement:
+  - ref: schema:public.subscriptions.unique_active_account
+    strength: hard
+
+  - ref: test:billing.single-active-subscription
+    strength: regression
+
+  - ref: symbol:billing.createSubscription
+    strength: partial
+
+This distinction matters because code may only partially enforce a documented invariant.
+
+6. Agent skill and runtime interface
+
+The skill is the primary interface between agents and the framework.
+
+It should not simply say, “Read the docs.”
+
+It should teach a protocol.
+
+I would separate it into several agent capabilities.
+
+A. Investigate
+
+Before making a change, the agent invokes something conceptually like:
+
+docs.context(
+  task="change token revocation behavior",
+  targets=["symbol:auth.verifyAccessToken"]
+)
+
+The result should be compact and ranked:
+
+Relevant intent
+Relevant invariants
+Applicable constraints
+Active decisions
+Known risks
+Rejected alternatives
+Canonical concepts
+Unresolved uncertainties
+
+The skill should instruct the agent:
+
+Read code first.
+
+Use docs for non-recoverable context.
+
+Treat canonical active knowledge as authoritative unless contradicted by reality.
+
+Surface conflicts rather than silently choosing.
+
+Do not treat historical items as current guidance.
+
+B. Propose documentation
+
+When the agent encounters missing context, it should decide whether documentation is warranted.
+
+The skill should ask:
+
+Would another capable agent be able to recover this from code?
+
+Will this information matter for future decisions?
+
+Is it stable enough to preserve?
+
+Is it already documented canonically?
+
+Can it be attached to a clear scope?
+
+Is the agent observing intent, or merely guessing intent?
+
+An agent should not document inferred intent as fact.
+
+Instead:
+
+YAML
+type: uncertainty
+statement: >
+  The behavior appears intended to preserve ordering, but no confirming
+  decision record was found.
+C. Verify
+
+The skill should define how to verify knowledge.
+
+For each item:
+
+Confirm its scope still exists.
+Check whether its supporting evidence changed.
+Check whether the statement still matches current intent.
+Check whether authority or ownership changed.
+Check whether a more canonical item supersedes it.
+Check for contradiction or duplication.
+Record confidence and evidence.
+D. Refactor documentation
+
+Agents need an explicit protocol for:
+
+merging duplicates,
+
+splitting overloaded documents,
+
+superseding decisions,
+
+moving contextual text to canonical concepts,
+
+converting implementation descriptions into source-derived references,
+
+archiving historical material.
+
+E. Complete a task
+
+Before declaring work complete, the skill should require:
+
+Resolve high-confidence impacted documentation items.
+Record “no documentation impact” with reasoning when appropriate.
+Add new knowledge only when information gain is meaningful.
+Do not create speculative rationale.
+Run documentation validation.
+7. Linters and validators
+
+There should be both deterministic and agentic linting.
+
+These are complementary.
+
+Deterministic linter
+
+It should catch things that can be proved mechanically.
+
+Syntax and schema
+Invalid knowledge type
+Missing required field
+Malformed reference
+Duplicate stable ID
+Unknown status
+Referential integrity
+Broken symbol reference
+Missing document
+Missing superseded item
+Reference to deleted schema
+Invalid owner
+Authority conflicts
+Two active canonical definitions for the same concept
+Two decisions claiming authority over the same scope
+Historical document included in default routing
+Structural rules
+Decision without consequences
+Assumption without failure consequence
+Invariant without scope
+Rejected alternative without associated decision
+Executable checks
+Code example fails
+Source-derived value changed
+Referenced test no longer exists
+Generated excerpt differs
+Agentic linter
+
+It should evaluate semantic quality.
+
+Low information gain
+“This function retries the request.”
+
+The code already shows that.
+
+Unsubstantiated intent
+“We do this for performance.”
+
+No evidence or decision context exists.
+
+Redundancy
+
+Two items express the same rationale.
+
+Contradiction
+Item A:
+Ordering is guaranteed per account.
+
+Item B:
+Ordering is not guaranteed.
+Scope ambiguity
+“Requests are retried three times.”
+
+Which requests? Which service? Which failure classes?
+
+Incomplete decisions
+
+The decision says what was chosen, but not why alternatives were rejected.
+
+Obsolete rationale
+
+The constraint that motivated a decision no longer exists.
+
+Narrative decay
+
+A long document contains unrelated decisions, assumptions, and historical notes that should be separated.
+
+Linter outputs should be typed
+
+Avoid generic warnings.
+
+YAML
+issue:
+  type: possible-duplicate
+  severity: warning
+  items:
+    - auth.stateless-validation
+    - identity.token-local-validation
+
+  explanation: >
+    Both items appear to state that token validation avoids database access.
+
+  suggested_actions:
+    - merge
+    - mark one contextual
+    - narrow scopes
+    - declare distinction
+8. Change-impact and maintenance engine
+
+This is the self-healing component.
+
+It should not simply mark all related docs stale.
+
+It should generate verification obligations.
+
+Change classification
+
+First classify the code change:
+
+Rename
+Move
+Signature change
+Behavior change
+Default change
+Schema change
+Dependency change
+Boundary change
+Removal
+New public surface
+Internal refactor
+Test-only change
+Impact rules by knowledge type
+
+Examples:
+
+Decision
+
+A refactor usually does not invalidate a decision.
+
+But removal of the chosen mechanism may.
+
+Constraint
+
+A code change rarely invalidates an external constraint.
+
+But an external API version change might.
+
+Assumption
+
+A change to event partitioning should trigger assumptions about ordering.
+
+Invariant
+
+Changes to enforcement points or tests should trigger verification.
+
+Risk
+
+A risky legacy path being removed may allow the risk item to be retired.
+
+Intent
+
+Behavior changes may require checking whether the original intent still holds.
+
+Verification obligations
+
+The engine should produce:
+
+YAML
+obligation:
+  knowledge_item: auth.stateless-validation
+  trigger:
+    type: symbol-behavior-change
+    ref: symbol:auth.verifyAccessToken
+
+  question: >
+    Does token validation still intentionally avoid synchronous persistence access?
+
+  evidence:
+    changed:
+      - symbol:auth.verifyAccessToken
+    unchanged:
+      - decision:auth.stateless-validation
+
+  required_outcome:
+    - confirmed
+    - updated
+    - superseded
+    - no-longer-applicable
+    - uncertain
+Confidence tiers
+Mandatory
+Recommended
+Informational
+
+Only strong, explainable dependencies should create mandatory obligations.
+
+Coherence maintenance
+
+The engine should also periodically look for corpus-wide decay:
+
+Duplicate rationale
+Contradictory guarantees
+Orphaned knowledge
+Items with no active scope
+Decisions whose implementation disappeared
+Assumptions with no recent validation
+Risks attached only to deleted code
+Canonical concepts with competing definitions
+
+This can run on pull requests and as a periodic repository health check.
+
+9. Repository workflows
+
+The framework must fit naturally into development work.
+
+Repository initialization
+
+An onboarding agent scans the repository and proposes:
+
+Domain boundaries
+Canonical concepts
+Likely invariants
+Existing ADRs
+Potential historical knowledge
+Current docs worth importing
+Docs that merely restate code
+
+It should not automatically invent intent.
+
+The result should be a migration plan, not a large generated corpus.
+
+Planning workflow
+
+When an agent receives a task:
+
+1. Resolve relevant code targets.
+2. Retrieve applicable knowledge.
+3. Highlight constraints, invariants, and risks.
+4. Identify contested or uncertain context.
+Pull-request workflow
+
+The pull request should include a documentation impact section:
+
+Knowledge impact
+
+Confirmed unchanged:
+- auth.stateless-validation
+- auth.revocation-delay
+
+Updated:
+- auth.token-guarantee
+
+New:
+- auth.refresh-token-rotation-constraint
+
+Unresolved:
+- none
+
+“No impact” should be a valid outcome.
+
+Review workflow
+
+Review agents should verify:
+
+The code still respects invariants.
+The implementation matches active decisions or explicitly supersedes them.
+New rationale is evidence-backed.
+No duplicate canonical item was introduced.
+Impacted obligations were resolved.
+Incident workflow
+
+Incidents often reveal undocumented knowledge.
+
+After an incident, the framework should ask:
+
+Did we discover a missing invariant?
+Was an assumption false?
+Was a known risk underestimated?
+Did an operational heuristic change?
+Should a decision be revisited?
+Deprecation workflow
+
+When a system path is removed:
+
+Retire associated risks
+Archive obsolete decisions
+Supersede outdated guarantees
+Remove invalid assumptions
+Preserve only historically meaningful context
+10. Governance and observability
+
+The system needs governance because semantic documentation involves judgment.
+
+Ownership model
+
+Ownership can exist at several levels:
+
+Domain owner
+Knowledge item owner
+Reviewer group
+Subject-matter expert
+Operational owner
+
+Agents should not become the ultimate authority for business intent.
+
+They can propose, organize, detect, and verify—but some items require human endorsement.
+
+Trust model
+
+Each item should record origin:
+
+YAML
+authorship:
+  created_by: agent
+  confirmed_by:
+    - human:alice
+  derived_from:
+    - issue:SEC-184
+    - incident:INC-431
+
+Possible trust states:
+
+Agent-inferred
+Agent-proposed
+Human-confirmed
+Source-derived
+Externally authoritative
+Contested
+Metrics
+
+Avoid measuring documentation by page count.
+
+Better metrics:
+
+Percentage of active invariants with enforcement or tests
+Percentage of decisions linked to current implementation
+Unresolved verification obligations
+Canonical authority conflicts
+Duplicate knowledge rate
+Stale external constraints
+Agent retrieval usefulness
+Accepted versus rejected documentation suggestions
+Time spent resolving documentation impact
+Number of incidents involving undocumented assumptions
+Feedback loops
+
+Agents and humans should be able to mark:
+
+Useful
+Irrelevant
+Outdated
+Misleading
+Too broad
+Duplicate
+Missing context
+
+That feedback should improve routing and relationship confidence.
+
+Supporting bricks
+
+Those ten layers are the main architecture, but several supporting components are also necessary.
+
+CLI
+
+A local interface might look like:
+
+Bash
+know init
+
+know context src/auth/verify.ts
+
+know why symbol:auth.verifyAccessToken
+
+know add decision
+
+know verify auth.stateless-validation
+
+know impact --base main
+
+know lint
+
+know graph
+
+know health
+Agent API or MCP-style interface
+
+The agent-facing interface should expose structured operations:
+
+get_context
+get_rationale
+get_applicable_invariants
+get_constraints
+search_knowledge
+propose_knowledge
+verify_knowledge
+resolve_impact
+report_conflict
+supersede_item
+
+Agents should not need to know whether Neo4j, SQLite, or flat indexes power it.
+
+Compiler
+
+The compiler:
+
+Parses docs
+Validates schemas
+Resolves references
+Builds graph
+Generates indexes
+Runs deterministic checks
+Produces agent bundles
+Plugin architecture
+
+Repositories differ.
+
+The framework should support plugins for:
+
+Languages
+Build systems
+Test frameworks
+Schemas
+Infrastructure systems
+Issue trackers
+Incident systems
+ADRs
+External contracts
+Ownership providers
+Policy configuration
+
+Teams will need configurable strictness.
+
+YAML
+policy:
+  require_human_confirmation:
+    - intent
+    - business-invariant
+    - external-guarantee
+
+  block_on:
+    - unresolved-critical-invariant
+    - canonical-authority-conflict
+    - broken-source-reference
+
+  warn_on:
+    - possible-duplicate
+    - low-information-gain
+A useful separation: knowledge, evidence, and presentation
+
+These should never be conflated.
+
+Knowledge
+We accept delayed revocation to keep validation stateless.
+Evidence
+ADR-42
+Auth design review
+Current validator implementation
+Load test results
+Presentation
+A rationale document
+An agent context packet
+A PR warning
+A generated architecture page
+
+The same knowledge item may be presented in several places without being duplicated semantically.
+
+That is how the system avoids the “one canonical definition versus many useful appearances” problem.
+
+A possible architecture
+Repository
+├── source code
+├── tests
+├── schemas
+├── config
+├── docs/
+│   ├── concepts/
+│   ├── decisions/
+│   ├── invariants/
+│   ├── constraints/
+│   └── narratives/
+└── .knowledge/
+    ├── policy.yaml
+    ├── ontology.yaml
+    └── owners.yaml
+          │
+          ▼
+Documentation compiler
+          │
+          ├── deterministic validator
+          ├── symbol resolver
+          ├── source-derived renderer
+          ├── graph builder
+          └── search indexer
+          │
+          ▼
+Knowledge runtime
+          ├── graph store
+          ├── lexical index
+          ├── semantic index
+          └── verification history
+          │
+          ▼
+Agent skill / API
+          ├── investigate
+          ├── explain
+          ├── propose
+          ├── verify
+          ├── refactor
+          └── resolve impact
+          │
+          ▼
+Development workflows
+          ├── coding agent
+          ├── review agent
+          ├── CI
+          ├── IDE
+          └── repository health jobs
+What I would build first
+
+A fully fledged framework is large. The initial slice should prove the philosophy.
+
+Version 0: rationale registry
+
+Support only:
+
+Decision
+Constraint
+Invariant
+Assumption
+Tradeoff
+Risk
+Concept
+
+And only these relationships:
+
+APPLIES_TO
+JUSTIFIES
+CONSTRAINS
+ENFORCED_BY
+VERIFIED_BY
+SUPERSEDES
+Version 0 capabilities
+Stable IDs
+Markdown/YAML authoring
+Symbol references
+Deterministic validation
+Agent context retrieval
+PR impact report
+Duplicate and contradiction review
+Structured agent verification outcome
+Deliberately omit initially
+Automatic prose rewriting
+Fully autonomous graph inference
+Broad semantic stale detection
+Complex document generation
+Deep Neo4j-specific architecture
+Large ontology customization
+
+The first proof should demonstrate:
+
+An agent changing code receives important non-obvious context before acting and is reliably prompted to update or verify only the knowledge that truly matters.
+
+That is the core value.
+
+The framework’s central lifecycle
+
+Everything can be reduced to this loop:
+
+Capture
+    Preserve non-recoverable knowledge.
+
+Attach
+    Connect it to the concepts, boundaries, and implementation it governs.
+
+Retrieve
+    Give it to agents at the moment it affects a decision.
+
+Challenge
+    Re-evaluate it when relevant conditions change.
+
+Resolve
+    Confirm, update, supersede, archive, or mark uncertain.
+
+Learn
+    Improve relationships, routing, and linting from outcomes.
+
+The system becomes fully fledged when all six stages are supported.
+
+The strongest framing I see is:
+
+A knowledge-contract framework for software repositories.
+
+The codebase describes the system’s realized behavior. The knowledge layer preserves the intent, constraints, decisions, and guarantees that should govern how that behavior evolves.
+
+=== [3] USER (33 chars) ===
+how could we call this framework?
+
+=== [4] ASSISTANT (5277 chars) ===
+A strong name should communicate three things:
+
+this is about preserving non-code knowledge
+
+it is meant for agents working inside repositories
+
+it keeps intent, constraints, and decisions attached to evolving code
+
+My strongest candidates:
+
+Best overall
+IntentGraph
+
+Clear, memorable, and close to the core idea: preserving intent and linking it to code, decisions, constraints, and invariants.
+
+Potential tagline:
+
+IntentGraph — the knowledge layer for software repositories.
+
+Best if you want a more foundational feel
+Groundwork
+
+Suggests foundational context beneath the code. It also works well for agent tooling.
+
+Groundwork preserves the knowledge code cannot explain.
+
+Best if you want the “contract” idea front and center
+KnowContract
+
+A bit more technical, but accurately describes the system as a knowledge-contract layer.
+
+Context Contract
+
+Very explicit, though less brandable.
+
+Intent Contract
+
+Strong conceptually, especially if the framework enforces documented intent around code changes.
+
+Best if you want something short and brandable
+Locus
+
+Means the place where something is situated. Good for attaching knowledge to code locations and concepts.
+
+Trace
+
+Captures traceability, evidence, decisions, and source linkage. Very clean, though somewhat generic.
+
+Whyline
+
+Directly emphasizes that the framework explains “why.” Memorable and developer-friendly.
+
+Rationale
+
+Accurate and elegant, although it may sound narrower than the full framework.
+
+Motif
+
+Suggests recurring intent or design patterns across a system. More abstract.
+
+Best if you want it to feel like infrastructure
+Knowledge Layer
+
+Not very brandable, but extremely clear.
+
+Repository Intelligence Layer
+
+Accurate, though long.
+
+Semantic Repository
+
+Emphasizes that the repository gains a semantic model beyond source code.
+
+RepoMind
+
+Easy to understand, but slightly more startup-like.
+
+CodeContext
+
+Clear, but it risks sounding like a code search or RAG product.
+
+Names built around “why”
+
+These fit the philosophy particularly well:
+
+WhyGraph
+
+WhyDocs
+
+Whybase
+
+WhyLayer
+
+WhyTrace
+
+WhyMap
+
+Whyspec
+
+Because
+
+Because is unusually memorable:
+
+Because — preserve why your system is built this way.
+
+It is playful, but it may be difficult to search for and protect as a brand.
+
+Names built around memory
+
+The framework is, in a sense, institutional memory for a codebase:
+
+RepoMemory
+
+CodeMemory
+
+Project Memory
+
+System Memory
+
+Engram
+
+Memora
+
+Continuum
+
+Engram is especially interesting. An engram is a stored trace of memory.
+
+Engram — persistent memory for software systems.
+
+It sounds technical and distinctive, though the meaning may not be immediately obvious.
+
+Names built around intent and decisions
+
+IntentGraph
+
+IntentLayer
+
+IntentMap
+
+IntentDB
+
+IntentSpec
+
+IntentKit
+
+DecisionGraph
+
+RationaleGraph
+
+DesignIntent
+
+SystemIntent
+
+Of these, IntentGraph and IntentLayer feel strongest.
+
+Names built around invariants and guardrails
+
+Guardrail
+
+Invariant
+
+Compass
+
+Northstar
+
+Doctrine
+
+Canon
+
+Charter
+
+Covenant
+
+Charter
+
+A charter defines purpose, responsibilities, and governing principles.
+
+Charter — the semantic contract for your codebase.
+
+This is strong because it encompasses intent, constraints, guarantees, and ownership.
+
+Canon
+
+Suggests canonical knowledge and authority. Very aligned with avoiding duplicate or conflicting documentation.
+
+Canon — authoritative knowledge for evolving software.
+
+The downside is that it is quite generic and overloaded.
+
+Doctrine
+
+Captures the idea of guiding principles, but may sound overly rigid or ideological.
+
+Names built around navigation for agents
+
+Compass
+
+Beacon
+
+Guidepost
+
+Wayfinder
+
+Maproom
+
+Breadcrumb
+
+Atlas
+
+Atlas
+
+A map of the system’s knowledge. Strong, but widely used.
+
+Wayfinder
+
+Good for the agent interface, though less obviously about preservation.
+
+Compass
+
+Excellent metaphor for guiding changes according to intent and constraints.
+
+Compass — help agents change code without losing intent.
+
+My recommended shortlist
+
+I would narrow it to these six:
+
+1. IntentGraph
+
+Best technical description of the underlying model.
+
+The intent and rationale graph attached to your codebase.
+
+2. Engram
+
+Best distinctive brand.
+
+Persistent institutional memory for software repositories.
+
+3. Charter
+
+Best conceptual framing.
+
+The governing knowledge layer for a software system.
+
+4. Whyline
+
+Best developer-facing name.
+
+Follow the why behind the code.
+
+5. Groundwork
+
+Best broad product name.
+
+Preserve the context future agents need.
+
+6. Compass
+
+Best agent-oriented metaphor.
+
+Guide code changes using intent, constraints, and invariants.
+
+My personal preference
+
+I would probably choose IntentGraph for the framework itself and give individual parts separate names:
+
+IntentGraph
+├── IntentLang      authoring format
+├── IntentLint      deterministic and agentic validation
+├── IntentIndex     graph and retrieval layer
+├── IntentSkill     agent instructions and interface
+└── IntentCheck     pull-request impact workflow
+
+That naming family is clear and coherent.
+
+A more brand-oriented alternative would be:
+
+Engram
+├── Engram Spec
+├── Engram Lint
+├── Engram Graph
+├── Engram Agent
+└── Engram Check
+
+My strongest two are therefore:
+
+IntentGraph if clarity matters most.
+
+Engram if distinctiveness and brandability matter most.
