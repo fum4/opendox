@@ -1,0 +1,13 @@
+[tools]
+node = "24"
+bun = "1.3"
+
+# Convention: the `setup` task is invoked once per repo on every fresh devbox
+# provision (by the `repos` Ansible role) and once on every `clone-repo` skill
+# run. Fill in this repo's first-time install command — e.g. `pnpm install`,
+# `cargo fetch`, `pip install -e .`, `bundle install`, etc.
+[tasks.setup]
+description = "First-time setup after clone (deps, codegen, …)"
+run = "bun install"
+
+
