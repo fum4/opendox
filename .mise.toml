@@ -8,6 +8,7 @@ bun = "1.3"
 # `cargo fetch`, `pip install -e .`, `bundle install`, etc.
 [tasks.setup]
 description = "First-time setup after clone (deps, codegen, …)"
-run = "bun install"
+# Docs only for now (no package.json): a no-op until code lands, then bun install.
+run = "test ! -f package.json || bun install"
 
 
