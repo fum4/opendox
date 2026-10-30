@@ -11,4 +11,8 @@ description = "First-time setup after clone (deps, codegen, …)"
 # Docs only for now (no package.json): a no-op until code lands, then bun install.
 run = "test ! -f package.json || bun install"
 
+# No gates yet (devbox docs/ci.md § Repo tasks): the repo is research docs only, with no
+# code to lint or test. Replace these markers with real tasks once code lands.
+# dev-contract: skip task-pre-push — owner's call 2026-10-29, nothing to check yet (docs only, no code)
+# dev-contract: skip task-pre-merge — owner's call 2026-10-29, nothing to test yet (docs only, no code)
 
