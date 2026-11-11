@@ -1,0 +1,20 @@
+# Everything about opendox as a repo, for cerebro (cerebro docs/plan.md § 8.1).
+
+[repo]
+name = "opendox"
+
+# No prior tier: agents merge, as they do today (docs/decisions/log/2026-11-11-agents-merge-opendox.md, the owner may veto).
+[merge]
+by = "agents"
+approval_paths = [
+  "cerebro/**",
+  ".github/workflows/**",
+  "infra/terraform/**",
+  "secrets/manifest",
+  "**/migrations/**",
+]
+
+# No gates yet: the repo is research docs only, with nothing to lint or test, and the owner chose
+# to skip both hook tasks until code lands (.mise.toml, 2026-10-29). No command is named here until
+# then; the hub decides, see the PR. Public repo: GitHub Actions is its CI once it has one.
+[gates]
